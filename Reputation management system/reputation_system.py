@@ -236,6 +236,7 @@ class Blockchain:
         print(f"{Colors.GREEN}Blockchain Integrity Verified: Valid.{Colors.ENDC}")
         return True
 
+
 # ==============================================================================
 # 7. Utilities & CLI Formatting
 # ==============================================================================
@@ -255,9 +256,18 @@ def print_section(title):
     print(f"\n{Colors.HEADER}{'='*60}")
     print(f" {title}")
     print(f"{'='*60}{Colors.ENDC}")
+    time.sleep(1.0) # Pause for effect
 
 def print_step(step, msg):
     print(f"{Colors.BOLD}[Step {step}]{Colors.ENDC} {msg}")
+    time.sleep(0.5) # Pause for effect
+
+def slow_print(msg, delay=0.02):
+    """Prints a message char by char for a typing effect."""
+    for char in msg:
+        print(char, end='', flush=True)
+        time.sleep(delay)
+    print()
 
 # ==============================================================================
 # 8. Main Simulation Workflow
@@ -269,6 +279,7 @@ def main():
     # Initialize Blockchain
     reputation_chain = Blockchain()
     print(f"{Colors.GREEN}Blockchain initialized with Genesis Block.{Colors.ENDC}")
+    time.sleep(1)
 
     # --- Step 1: Register Developer ---
     print_section("1. Identity Registration")
@@ -279,69 +290,88 @@ def main():
     dev_name = name_input if name_input else "Alice"
     
     dev_alice = Developer(dev_name)
+    time.sleep(0.5)
     
     # Truncate for display
     display_id = dev_alice.id.replace('\n', '')[27:80] + "..."
     print(f"   > Developer Name: {Colors.CYAN}{dev_alice.name}{Colors.ENDC}")
+    time.sleep(0.3)
     print(f"   > Public Key (ID): {display_id}")
+    time.sleep(1)
 
     # --- Step 2: Create Contribution ---
     print_section("2. Contribution Submission")
-    code_snippet = "def hello_world():\n    print('Hello, Decentralized World!')"
+    
+    print("   > Enter your code contribution line by line.")
+    print("   > Press Enter twice to finish.")
+    
+    code_lines = []
+    while True:
+        line = input("   : ")
+        if line:
+            code_lines.append(line)
+        else:
+            break
+            
+    if not code_lines:
+        code_snippet = "def hello_world():\n    print('Hello, Decentralized World!')"
+        print(f"   > No input provided. Using default sample code.")
+    else:
+        code_snippet = "\n".join(code_lines)
+
     print_step(2, f"Developer {dev_alice.name} submits code:")
     print(f"{Colors.BLUE}{code_snippet}{Colors.ENDC}")
+    time.sleep(1)
     
     contribution = Contribution(code_snippet)
     
     # --- Step 3: Hashing ---
     print_section("3. Contribution Hashing")
+    print("   > Calculating SHA-256 Hash...", end=" ", flush=True)
+    time.sleep(1)
+    print("Done.")
+    
     contrib_hash = contribution.calculate_hash()
-    print_step(3, "Generated SHA-256 Hash of source code:")
-    print(f"   > Hash: {Colors.WARNING}{contrib_hash}{Colors.ENDC}")
+    print_step(3, "Generated Unique Fingerprint:")
+    slow_print(f"   > Hash: {Colors.WARNING}{contrib_hash}{Colors.ENDC}", delay=0.01)
+    time.sleep(0.5)
 
-    # --- Step 4: Digital Signature ---
+    # --- Step 4: Digital Signing ---
     print_section("4. Digital Signing")
+    print(f"   > Signing with {dev_alice.name}'s Private Key...", end=" ", flush=True)
+    time.sleep(1)
+    print("Signed.")
+    
     signature = dev_alice.sign_hash(contrib_hash)
-    print_step(4, f"{dev_alice.name} signs the hash with Private Key.")
-    print(f"   > Signature (Hex): {signature[:60]}...")
+    print_step(4, f"Cryptographic Signature Generated:")
+    slow_print(f"   > Signature (Hex): {signature[:60]}...", delay=0.01)
+    time.sleep(0.5)
 
     # --- Step 5: Verification ---
     print_section("5. Decentralized Verification")
     print_step(5, f"System verifying signature against Public Key of {dev_alice.name}...")
+    time.sleep(1)
+    
+    print("   > Verifying math...", end=" ", flush=True)
+    time.sleep(1)
     
     is_valid = SignatureVerifier.verify(dev_alice.id, contrib_hash, signature)
     
     if is_valid:
-        print(f"   > Result: {Colors.GREEN}VERIFIED VALID ✅{Colors.ENDC}")
+        print(f" {Colors.GREEN}VERIFIED VALID ✅{Colors.ENDC}")
         verification_val = 1
     else:
-        print(f"   > Result: {Colors.FAIL}INVALID SIGNATURE ❌{Colors.ENDC}")
+        print(f" {Colors.FAIL}INVALID SIGNATURE ❌{Colors.ENDC}")
         verification_val = 0
         exit(1) # Stop simulation if invalid
+    time.sleep(0.5)
 
     # --- Step 6: Reputation Computation ---
     print_section("6. Reputation Score Calculation")
     print_step(6, "Evaluating contribution metrics...")
+    time.sleep(0.5)
     
-    # Input parameters from Patent Prototype Design
-    # quality=8, peer_validation=7, impact=6, trust=9
-    # Converting to factors: Q=8, V=1, I=6, T=0.9 (normalized mostly, but let's follow the simple product)
-    # The user prompt example output was 7.6, but user request says:
-    # R = Sum(Wi * Qi * Vi * Ii * Ti)
-    # Let's map inputs:
-    # Quality (Q) = 8
-    # Verification (V) = 1 (Verified)
-    # Impact (I) = 6
-    # Trust/Time (T) = 0.9 (Approximating 'trust=9' as 0.9 factor or just 9, let's use 9 to match magnitude or scale)
-    # Wait, the user prompt Example: quality=8, peer=7, impact=6, trust=9 -> score=7.6?
-    # That math doesn't multiply to 7.6. 8*1*6*9 = 432. 
-    # Maybe it's a weighted sum? The formula shows Multiplication: (Wi * Qi * Vi * Ii * Ti).
-    # Ah, the formula is SUM of terms. But for a single contribution, it's just one term.
-    # Maybe the "7.6" in the prompt example was an arbitrary number or average?
-    # I will stick to the Multiplication formula provided in valid latex: $R = \sum_{i=1}^{n} (W_i \times Q_i \times V_i \times I_i \times T_i)$
-    # And I'll assume Wi (Weight) scales it down. Let's set W=0.01 to keep it manageable, or just output the raw number.
-    # Actually, let's follow the formula strictly.
-    
+    # Input parameters
     factors = ReputationFactors(
         W=0.01, # Arbitrary weight to normalize
         Q=8.0,
@@ -351,16 +381,16 @@ def main():
     )
     
     score = ReputationEngine.compute_score(factors)
-    # 0.01 * 8 * 1 * 6 * 9 = 4.32. 
-    # I'll adjust W to match the user's "7.6" example closer if I wanted, but better to be chemically pure to the formula.
-    # I'll stick to the logic: R = W * Q * V * I * T
     
     print(f"   > Inputs: Quality={factors.Q}, Verified={factors.V}, Impact={factors.I}, Trust={factors.T}, Weight={factors.W}")
+    time.sleep(0.5)
     print(f"   > Calculated Reputation Score: {Colors.GREEN}{score}{Colors.ENDC}")
+    time.sleep(1)
 
     # --- Step 7: Blockchain Commit ---
     print_section("7. Committing to Blockchain Ledger")
     print_step(7, "Mining new block with contribution data...")
+    time.sleep(1.5) # Fake "mining" time
     
     new_block = reputation_chain.add_block(
         developer_id=dev_alice.id,
@@ -370,12 +400,16 @@ def main():
     )
     
     print(f"   > Block #{new_block.index} mined!")
+    time.sleep(0.2)
     print(f"   > Block Hash: {new_block.hash}")
+    time.sleep(0.2)
     print(f"   > Previous Hash: {new_block.previous_hash}")
+    time.sleep(1)
 
     # --- Step 8: Ledger Display ---
     print_section("8. Final Blockchain Ledger")
     print(f"{Colors.CYAN}JSON Dump of Immutable Record:{Colors.ENDC}")
+    time.sleep(1)
     print(reputation_chain.to_json())
 
 if __name__ == "__main__":
